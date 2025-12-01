@@ -57,9 +57,9 @@ project_env_path = os.path.join(project_root, ".env")
 load_dotenv(config_env_path)
 load_dotenv(project_env_path)
 
-GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT", "formare-ai")
 GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
-STAGING_BUCKET = os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET")
+STAGING_BUCKET = os.getenv("GOOGLE_CLOUD_STORAGE_BUCKET", "formare-ai-agent-engine")
 
 # Validate configuration
 if not GOOGLE_CLOUD_PROJECT:
