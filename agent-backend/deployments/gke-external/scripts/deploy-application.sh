@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 
 PROJECT_ID="${GCP_PROJECT_ID:-formare-ai}"
 REGION="${GCP_REGION:-europe-west4}"
-CLUSTER_NAME="${CLUSTER_NAME:-ai-agents-cluster}"
+CLUSTER_NAME="${CLUSTER_NAME:-cluster-ai-agents}"
 
 # Application Configuration
 APP_NAME="${APP_NAME:-agent-factory-ai}"

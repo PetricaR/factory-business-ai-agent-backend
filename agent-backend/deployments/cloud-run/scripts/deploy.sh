@@ -29,8 +29,8 @@ PLATFORM="${PLATFORM:-managed}"
 ALLOW_UNAUTHENTICATED="${ALLOW_UNAUTHENTICATED:-true}"
 
 # Resource Configuration
-MEMORY="${MEMORY:-1Gi}"
-CPU="${CPU:-1}"
+MEMORY="${MEMORY:-32Gi}"
+CPU="${CPU:-8}"
 MAX_INSTANCES="${MAX_INSTANCES:-10}"
 MIN_INSTANCES="${MIN_INSTANCES:-0}"
 TIMEOUT="${TIMEOUT:-300}"
@@ -185,7 +185,8 @@ deploy_to_cloud_run() {
         --concurrency=$CONCURRENCY \
         --max-instances=$MAX_INSTANCES \
         --min-instances=$MIN_INSTANCES \
-        --port=8080"
+        --port=8080 \
+        --set-env-vars \"MCP_SERVER_URL=${MCP_SERVER_URL},GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY},API_KEY_TARGETARE=${API_KEY_TARGETARE},GOOGLE_CUSTOM_SEARCH_API_KEY=${GOOGLE_CUSTOM_SEARCH_API_KEY},GOOGLE_CUSTOM_SEARCH_CX=${GOOGLE_CUSTOM_SEARCH_CX}\""
     
     if [ "$ALLOW_UNAUTHENTICATED" == "true" ]; then
         deploy_cmd="$deploy_cmd --allow-unauthenticated"

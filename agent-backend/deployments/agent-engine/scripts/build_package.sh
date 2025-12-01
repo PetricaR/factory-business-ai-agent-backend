@@ -48,7 +48,7 @@ fi
 
 # Install build tools
 echo "📦 Installing build tools..."
-pip install -q --upgrade build wheel setuptools
+# python -m pip install -q --upgrade build wheel setuptools
 
 # Clean previous builds
 echo "🧹 Cleaning previous builds..."

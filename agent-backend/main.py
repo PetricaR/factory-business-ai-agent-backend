@@ -26,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Get port from Cloud Run environment
-PORT = int(os.getenv("PORT", "8082"))
+PORT = int(os.getenv("PORT", "8080"))
 
 # Get the directory where main.py is located
 AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -55,7 +55,13 @@ if not CUSTOM_SEARCH_CONFIGURED:
 
 # Session service URI (using SQLite for local development)
 # ADK automatically manages sessions with Cloud Storage in production
-SESSION_SERVICE_URI = "sqlite:///./sessions.db"
+# Session service URI
+# In Cloud Run, we should use a path that is writable or ephemeral if not using Cloud SQL
+# Using /tmp for writable ephemeral storage in Cloud Run
+if os.getenv("K_SERVICE"):  # Check if running in Cloud Run
+    SESSION_SERVICE_URI = "sqlite:////tmp/sessions.db"
+else:
+    SESSION_SERVICE_URI = "sqlite:///./sessions.db"
 
 # CORS origins - configure based on your deployment
 ALLOWED_ORIGINS = [
@@ -526,7 +532,7 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=PORT,
+        # port=PORT,
         log_level="info",
         # WebSocket configuration for stable connections
         ws_ping_interval=20,  # Keep connections alive
