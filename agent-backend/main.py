@@ -8,9 +8,12 @@ ADDED: Google Custom Search (Programmable Search Engine)
 import os
 import logging
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from google.adk.cli.fast_api import get_fast_api_app
+import json
+from typing import AsyncIterator
 # load environment variables from .env file
 from dotenv import load_dotenv
 load_dotenv()
@@ -177,7 +180,9 @@ async def health_check():
             "protocol": "websocket",
             "bidirectional": True,
             "vad_enabled": True,
-            "interruption_support": True
+            "interruption_support": True,
+            "sse_streaming": True,
+            "async_stream_query": True
         },
         "tools": {
             "mcp_integration": True,
@@ -245,8 +250,15 @@ async def agent_info():
             "MCP session timeout increased to 60 seconds",
             "Better error handling for MCP initialization",
             "Improved WebSocket stability",
-            "Added Google Custom Search integration"
-        ]
+            "Added Google Custom Search integration",
+            "Implemented SSE streaming with async_stream_query",
+            "Added RunConfig for advanced streaming scenarios"
+        ],
+        "streaming_endpoints": {
+            "sse_streaming": "/stream-query",
+            "websocket": "/ws (via ADK auto-configuration)",
+            "description": "Use /stream-query for text streaming, WebSocket for live audio"
+        }
     }
 
 
@@ -304,6 +316,106 @@ async def config_status():
         })
     
     return config_status
+
+
+@app.post("/stream-query")
+async def stream_query(request: Request):
+    """
+    Streaming query endpoint using Server-Sent Events (SSE).
+    
+    This endpoint streams responses in real-time as they are generated,
+    instead of waiting for the complete response.
+    
+    Request body:
+        {
+            "user_id": "unique-user-id",
+            "message": "Your question here",
+            "session_id": "optional-session-id"
+        }
+    
+    Response format: Server-Sent Events (SSE)
+        event: message
+        data: {"type": "text", "content": "streaming text..."}
+        
+        event: done
+        data: {"type": "complete"}
+    
+    Example usage:
+        curl -N -X POST http://localhost:8082/stream-query \
+             -H "Content-Type: application/json" \
+             -d '{"user_id": "test-user", "message": "Research coffee shop trends in Romania"}'
+    
+    Cloud Run deployment:
+        curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+             -H "Content-Type: application/json" \
+             https://LOCATION-aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/LOCATION/reasoningEngines/RESOURCE_ID:streamQuery?alt=sse \
+             -d '{
+               "class_method": "async_stream_query",
+               "input": {
+                 "user_id": "USER_ID",
+                 "message": "Your question"
+               }
+             }'
+    """
+    try:
+        # Import here to avoid circular imports
+        from agent_factory_ai.agent import create_streaming_app
+        
+        # Parse request body
+        body = await request.json()
+        user_id = body.get("user_id", "anonymous")
+        message = body.get("message")
+        session_id = body.get("session_id", None)
+        
+        if not message:
+            return {"error": "Missing 'message' in request body"}
+        
+        # Create streaming app
+        streaming_app = create_streaming_app()
+        
+        async def event_generator() -> AsyncIterator[str]:
+            """Generate SSE events from agent responses."""
+            try:
+                # Stream query results
+                async for event in streaming_app.async_stream_query(
+                    user_id=user_id,
+                    message=message,
+                    session_id=session_id
+                ):
+                    # Format as SSE
+                    event_data = {
+                        "type": "event",
+                        "content": str(event)
+                    }
+                    yield f"event: message\n"
+                    yield f"data: {json.dumps(event_data)}\n\n"
+                
+                # Send completion event
+                yield f"event: done\n"
+                yield f"data: {{\"type\": \"complete\"}}\n\n"
+                
+            except Exception as e:
+                logger.error(f"Streaming error: {e}")
+                error_data = {
+                    "type": "error",
+                    "content": str(e)
+                }
+                yield f"event: error\n"
+                yield f"data: {json.dumps(error_data)}\n\n"
+        
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",  # Disable nginx buffering
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Stream query error: {e}")
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":

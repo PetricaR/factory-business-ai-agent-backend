@@ -33,12 +33,16 @@ from dotenv import load_dotenv
 from google.adk.tools import google_search, agent_tool
 
 # ADK imports
-from google.adk.agents import Agent
+from google.adk.agents import Agent, RunConfig
+from google.adk.agents.RunConfig import StreamingMode
 from google.adk.tools.mcp_tool.mcp_toolset import (
     MCPToolset,
     StreamableHTTPConnectionParams,
     SseConnectionParams
 )
+
+# Streaming support
+from vertexai.agent_engines import AdkApp
 
 # Load environment variables
 load_dotenv()
@@ -95,6 +99,11 @@ class UltimateAgentConfig:
     custom_search_api_key: Optional[str] = None
     custom_search_cx: Optional[str] = None
     
+    # Streaming configuration
+    enable_streaming: bool = True
+    streaming_mode: str = "SSE"  # SSE, BIDI, or NONE
+    max_llm_calls: int = 200
+    
     @classmethod
     def from_environment(cls) -> 'UltimateAgentConfig':
         """Create configuration from environment variables."""
@@ -108,6 +117,9 @@ class UltimateAgentConfig:
             enable_web_search=os.getenv("ENABLE_WEB_SEARCH", "true").lower() == "true",
             custom_search_api_key=os.getenv("GOOGLE_CUSTOM_SEARCH_API_KEY"),
             custom_search_cx=os.getenv("GOOGLE_CUSTOM_SEARCH_CX"),
+            enable_streaming=os.getenv("ENABLE_STREAMING", "true").lower() == "true",
+            streaming_mode=os.getenv("STREAMING_MODE", "SSE").upper(),
+            max_llm_calls=int(os.getenv("MAX_LLM_CALLS", "200")),
         )
 
 
@@ -540,6 +552,110 @@ except Exception as e:
     logger.error(f"  Expected MCP server at: http://localhost:8000/mcp")
     logger.error("  Run: python ultimate_business_intelligence_complete.py")
     root_agent = None
+
+
+# ============================================================================
+# STREAMING SUPPORT
+# ============================================================================
+
+def create_streaming_app(agent: Optional[Agent] = None, config: Optional[UltimateAgentConfig] = None) -> AdkApp:
+    """
+    Create a streaming-ready AdkApp wrapper for the agent.
+    
+    This enables async_stream_query() for real-time streaming responses,
+    perfect for Cloud Run deployment with Server-Sent Events (SSE).
+    
+    Args:
+        agent: Agent instance (uses root_agent if None)
+        config: Optional configuration (uses environment if None)
+        
+    Returns:
+        AdkApp instance ready for streaming queries
+        
+    Example Usage:
+        >>> app = create_streaming_app()
+        >>> async for event in app.async_stream_query(
+        ...     user_id="user-123",
+        ...     message="Research coffee shop trends in Romania"
+        ... ):
+        ...     print(event)
+    
+    Cloud Run Deployment:
+        curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+             -H "Content-Type: application/json" \
+             https://LOCATION-aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/LOCATION/reasoningEngines/RESOURCE_ID:streamQuery?alt=sse \
+             -d '{
+               "class_method": "async_stream_query",
+               "input": {
+                 "user_id": "USER_ID",
+                 "message": "Your question"
+               }
+             }'
+    """
+    if agent is None:
+        if root_agent is None:
+            if config is None:
+                config = UltimateAgentConfig.from_environment()
+            agent = create_business_intelligence_agent(config)
+        else:
+            agent = root_agent
+    
+    app = AdkApp(agent=agent)
+    logger.info("✓ Streaming app created with AdkApp")
+    logger.info("  Use async_stream_query() for streaming responses")
+    
+    return app
+
+
+def get_run_config(config: Optional[UltimateAgentConfig] = None) -> RunConfig:
+    """
+    Create RunConfig for advanced streaming scenarios.
+    
+    This is used for run_live() with bidirectional streaming,
+    typically for real-time audio/video applications.
+    
+    Args:
+        config: Optional configuration (uses environment if None)
+        
+    Returns:
+        RunConfig with appropriate streaming settings
+        
+    Example:
+        >>> from google.adk.agents import LiveRequestQueue
+        >>> run_config = get_run_config()
+        >>> live_request_queue = LiveRequestQueue()
+        >>> async for event in runner.run_live(
+        ...     session=session,
+        ...     live_request_queue=live_request_queue,
+        ...     run_config=run_config
+        ... ):
+        ...     if event.server_content and event.server_content.model_turn:
+        ...         for part in event.server_content.model_turn.parts:
+        ...             if part.text:
+        ...                 print(part.text)
+    """
+    if config is None:
+        config = UltimateAgentConfig.from_environment()
+    
+    # Map string mode to StreamingMode enum
+    mode_mapping = {
+        "SSE": StreamingMode.SSE,
+        "BIDI": StreamingMode.BIDI,
+        "NONE": StreamingMode.NONE
+    }
+    
+    streaming_mode = mode_mapping.get(config.streaming_mode, StreamingMode.SSE)
+    
+    run_config = RunConfig(
+        streaming_mode=streaming_mode,
+        max_llm_calls=config.max_llm_calls
+    )
+    
+    logger.info(f"✓ RunConfig created")
+    logger.info(f"  Streaming Mode: {config.streaming_mode}")
+    logger.info(f"  Max LLM Calls: {config.max_llm_calls}")
+    
+    return run_config
 
 
 # ============================================================================
