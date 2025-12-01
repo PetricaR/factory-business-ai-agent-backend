@@ -42,7 +42,7 @@ AR_LOCATION="${AR_LOCATION:-$REGION}"
 AR_REPOSITORY="${AR_REPOSITORY:-docker-repo}"
 
 # Build Configuration
-BUILD_CONTEXT="${BUILD_CONTEXT:-..}"
+BUILD_CONTEXT="${BUILD_CONTEXT:-../../..}"  # From deployments/cloud-run/scripts/ to agent-backend/
 
 # =======================================
 # Helper Functions

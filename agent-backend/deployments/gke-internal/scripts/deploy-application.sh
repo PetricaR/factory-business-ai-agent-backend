@@ -33,8 +33,8 @@ AR_LOCATION="${AR_LOCATION:-$REGION}"
 AR_REPOSITORY="${AR_REPOSITORY:-docker-repo}"
 
 # Build Configuration
-BUILD_CONTEXT=".."
-DEPLOYMENT_DIR="../k8s"
+BUILD_CONTEXT="../../.."  # From deployments/gke-internal/scripts/ to agent-backend/
+DEPLOYMENT_DIR="../k8s"   # From deployments/gke-internal/scripts/ to deployments/gke-internal/k8s/
 
 # =======================================
 # Helper Functions

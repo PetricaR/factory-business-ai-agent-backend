@@ -8,12 +8,33 @@ Choose your deployment method:
 
 | Type | Use Case | Command | Access |
 |------|----------|---------|--------|
+| **Agent Engine** | Managed AI deployment | `cd agent-engine && python deploy.py` | REST API |
 | **GKE External** | Production with public access | `cd gke-external && bash deploy.sh` | LoadBalancer IP |
 | **GKE Internal** | Private VPC-only access | `cd gke-internal && bash deploy.sh` | Internal IP |
 | **Cloud Run** | Serverless, auto-scaling | `cd cloud-run && bash deploy.sh` | HTTPS URL |
 | **Local** | Development & testing | `cd local && bash start.sh` | localhost:8082 |
 
 ## Deployment Types
+
+### 🤖 Agent Engine ([agent-engine/](file:///Users/radanpetrica/PFA/agents/agents-adk-mcp/ai_agents/agent-factory-repo/factory_business_ai_agent_backend/agent-backend/deployments/agent-engine/))
+
+**Best for:** Enterprise AI deployments with managed infrastructure
+
+- ✅ Fully managed by Vertex AI
+- ✅ Built-in tracing and monitoring
+- ✅ Automatic scaling
+- ✅ Session management included
+- ✅ REST API with authentication
+
+**Quick Deploy:**
+
+```bash
+cd agent-engine
+bash scripts/build_package.sh
+python deploy.py
+```
+
+---
 
 ### 🌐 GKE External ([gke-external/](file:///Users/radanpetrica/PFA/agents/agents-adk-mcp/ai_agents/agent-factory-repo/factory_business_ai_agent_backend/agent-backend/deployments/gke-external/))
 
@@ -90,15 +111,17 @@ bash start.sh
 
 ## Comparison Matrix
 
-| Feature | GKE External | GKE Internal | Cloud Run | Local |
-|---------|--------------|--------------|-----------|-------|
-| **Cost** | Medium-High | Medium-High | Low (scale-to-zero) | Free |
-| **Setup Time** | 5-10 min | 5-10 min | 2-3 min | 1 min |
-| **Scalability** | Manual | Manual | Automatic | N/A |
-| **Public Access** | ✅ Yes | ❌ No | ✅ Yes | ❌ No |
-| **SSL/HTTPS** | Manual | Manual | Automatic | No |
-| **Cold Starts** | No | No | Yes | No |
-| **Min Cost** | ~$70/month | ~$70/month | $0 when idle | $0 |
+| Feature | Agent Engine | GKE External | GKE Internal | Cloud Run | Local |
+|---------|--------------|--------------|--------------|-----------|-------|
+| **Cost** | Pay-per-request | Medium-High | Medium-High | Low (scale-to-zero) | Free |
+| **Setup Time** | 5-10 min | 5-10 min | 5-10 min | 2-3 min | 1 min |
+| **Scalability** | Automatic | Manual | Manual | Automatic | N/A |
+| **Public Access** | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ❌ No |
+| **SSL/HTTPS** | Automatic | Manual | Manual | Automatic | No |
+| **Cold Starts** | Yes | No | No | Yes | No |
+| **Min Cost** | ~$10/mo | ~$70/month | ~$70/month | $0 when idle | $0 |
+| **Tracing** | Built-in | Manual | Manual | Manual | Manual |
+| **Session Mgmt** | Built-in | Manual | Manual | Manual | Manual |
 
 ## Prerequisites
 
@@ -144,6 +167,7 @@ See each deployment folder's README for specific configuration details.
 
 For deployment-specific help, see the README in each deployment folder:
 
+- [agent-engine/README.md](file:///Users/radanpetrica/PFA/agents/agents-adk-mcp/ai_agents/agent-factory-repo/factory_business_ai_agent_backend/agent-backend/deployments/agent-engine/README.md)
 - [gke-external/README.md](file:///Users/radanpetrica/PFA/agents/agents-adk-mcp/ai_agents/agent-factory-repo/factory_business_ai_agent_backend/agent-backend/deployments/gke-external/README.md)
 - [gke-internal/README.md](file:///Users/radanpetrica/PFA/agents/agents-adk-mcp/ai_agents/agent-factory-repo/factory_business_ai_agent_backend/agent-backend/deployments/gke-internal/README.md)
 - [cloud-run/README.md](file:///Users/radanpetrica/PFA/agents/agents-adk-mcp/ai_agents/agent-factory-repo/factory_business_ai_agent_backend/agent-backend/deployments/cloud-run/README.md)
