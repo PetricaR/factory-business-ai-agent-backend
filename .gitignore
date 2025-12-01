@@ -211,3 +211,4 @@ agent-backend/agent_factory_ai/auth/formare-ai-gcp.json
 agent-backend/auth/formare-ai-gcp.json
 agent_live_audio_and_text/auth/formare-ai-gcp.json
 *.json
+.env

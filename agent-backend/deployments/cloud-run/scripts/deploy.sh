@@ -21,7 +21,7 @@ PROJECT_ID="${GCP_PROJECT_ID:-formare-ai}"
 REGION="${GCP_REGION:-europe-west4}"
 
 # Application Configuration
-APP_NAME="${APP_NAME:-agent-factory-ai}"
+APP_NAME="${APP_NAME:-agent-factory-ai-backend}"
 SERVICE_NAME="${SERVICE_NAME:-$APP_NAME}"
 
 # Cloud Run Configuration
