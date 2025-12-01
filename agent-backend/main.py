@@ -420,7 +420,7 @@ async def stream_query(request: Request):
 
 if __name__ == "__main__":
     print("\n" + "=" * 70)
-    print("🎤 Factory Finder Agent - LIVE AUDIO STREAMING + WEB SEARCH")
+    print("🎤 Factory Finder Agent - LIVE AUDIO + SSE STREAMING")
     print("   Enhanced with Programmable Search Engine (October 2025)")
     print("=" * 70)
     print(f"\n📍 Endpoints:")
@@ -429,12 +429,19 @@ if __name__ == "__main__":
     print(f"   ❤️  Health:      http://localhost:{PORT}/health")
     print(f"   ℹ️  Info:        http://localhost:{PORT}/info")
     print(f"   ⚙️  Config:      http://localhost:{PORT}/config")
+    print(f"   🌊 Streaming:   http://localhost:{PORT}/stream-query")
     
     print(f"\n🎙️  Audio Features:")
     print(f"   ✓ Bidirectional streaming (WebSocket)")
     print(f"   ✓ Voice Activity Detection (VAD)")
     print(f"   ✓ Natural interruptions")
     print(f"   ✓ Low-latency responses")
+    
+    print(f"\n🌊 Text Streaming (NEW):")
+    print(f"   ✓ Server-Sent Events (SSE)")
+    print(f"   ✓ Real-time response streaming")
+    print(f"   ✓ async_stream_query support")
+    print(f"   ✓ Cloud Run compatible")
     
     print(f"\n🗺️  Location Intelligence:")
     if GOOGLE_MAPS_CONFIGURED:
